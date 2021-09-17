@@ -2,11 +2,14 @@ package mongocon
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type MongoDB struct {
@@ -14,8 +17,8 @@ type MongoDB struct {
 }
 
 func ConnectMongoDB() *MongoDB {
-
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	uri := os.Getenv("mongoURI")
+	client, err := mongo.NewClient(options.Client().SetDirect(true).ApplyURI(uri))
 
 	if err != nil {
 		log.Fatal(err)
@@ -27,6 +30,14 @@ func ConnectMongoDB() *MongoDB {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		fmt.Println("Can not connect to the db server")
+		//panic(err)
+	}
+
+	//fmt.Println("connection ok")
 
 	return &MongoDB{client}
 }
